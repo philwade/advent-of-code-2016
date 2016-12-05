@@ -1,6 +1,7 @@
 module Day2 exposing(..)
 import Html exposing(text, div)
 import List exposing(map, foldl, reverse, tail, head)
+import Array exposing(Array, fromList, get)
 
 main = div []
        [ text (allLines directions
@@ -80,16 +81,18 @@ move2 direction (x, y) =
             Value _ -> newPosition
 
 
-grid : List (List GridValue)
-grid = [ [ None,      None,      Value "1", None,      None ]
-       , [ None,      Value "2", Value "3", Value "4", None ]
-       , [ Value "5", Value "6", Value "7", Value "8", Value "9" ]
-       , [ None,      Value "A", Value "B", Value "C", None ]
-       , [ None,      None,      Value "D", None,      None ]
-       ]
+grid : Array (Array GridValue)
+grid = fromList [ fromList [ None,      None,      Value "1", None,      None ]
+                , fromList [ None,      Value "2", Value "3", Value "4", None ]
+                , fromList [ Value "5", Value "6", Value "7", Value "8", Value "9" ]
+                , fromList [ None,      Value "A", Value "B", Value "C", None ]
+                , fromList [ None,      None,      Value "D", None,      None ]
+                ]
 
-getGridValue : List (List GridValue) -> (Int, Int) -> GridValue
-getGridValue grid (x,y) = getGridRow y 0 grid |> getGridColumn x 0
+defaultArray = fromList [None]
+
+getGridValue : Array (Array GridValue) -> (Int, Int) -> GridValue
+getGridValue grid (x,y) = get y grid |> Maybe.withDefault defaultArray |> get x |> Maybe.withDefault None
 
 getGridRow : Int -> Int -> List (List GridValue) -> List GridValue
 getGridRow index current grid =

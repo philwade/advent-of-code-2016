@@ -4,6 +4,7 @@ import Html exposing(text, div)
 import Dict exposing(Dict)
 import String exposing(split)
 import List exposing(foldl, filter)
+import Array exposing(Array)
 
 {-
 --- Day 4: Security Through Obscurity ---
@@ -25,14 +26,60 @@ What is the sum of the sector IDs of the real rooms?
 
 partOneOutput = createInputList input |> mapInputToType |> calculateSumOfValidInput |> toString
 
+{-
+--- Part Two ---
+
+With all the decoy data out of the way, it's time to decrypt this list and get moving.
+
+The room names are encrypted by a state-of-the-art shift cipher, which is nearly unbreakable without the right software. However, the information kiosk designers at Easter Bunny HQ were not expecting to deal with a master cryptographer like yourself.
+
+To decrypt a room name, rotate each letter forward through the alphabet a number of times equal to the room's sector ID. A becomes B, B becomes C, Z becomes A, and so on. Dashes become spaces.
+
+For example, the real name for qzmt-zixmtkozy-ivhz-343 is very encrypted name.
+
+What is the sector ID of the room where North Pole objects are stored?
+
+-}
+
+partTwoOutput = createInputList input |> mapInputToType |> List.filter (\x -> x.roomName == "northpole object storage")
+
 main = div []
-       [ text partOneOutput
+       [ text (partTwoOutput |> toString)
        ]
 
 type alias Input = { computedCheckSum: String
                    , givenCheckSum: String
                    , value: Int
+                   , roomName: String
                    }
+
+-- extract the name of the room from the input string
+getCipheredRoomName : String -> String
+getCipheredRoomName string = String.dropRight 11 string
+
+alphabet = "abcdefghijklmnopqrstuvwxyz"
+keyAlphabet = Array.fromList (String.split "" alphabet)
+
+-- tell me what position a letter lives at
+getAlphaIndex : String -> Int
+getAlphaIndex key = String.indexes key alphabet |> List.head |> Maybe.withDefault 0
+
+-- decipher a room name given a rotation
+decipherRoomName : String -> Int -> String
+decipherRoomName name rotation = List.map (decipherCharacter rotation) (String.split "" name) |> String.join ""
+
+decipherCharacter : Int -> String -> String
+decipherCharacter rotation char =
+    let
+        index = getAlphaIndex char
+        newChar = if char == "-" then
+                    " "
+                  else
+                    case (Array.get ((index + rotation) % 26) keyAlphabet) of
+                        Just val -> val
+                        Nothing -> "E"
+    in
+        newChar
 
 -- get integer value of input
 getGivenValue : String -> Int
@@ -117,7 +164,12 @@ createInputList input = String.split "\n" input
 
 -- Create Inputs from a list of input strings
 mapInputToType : List String -> List Input
-mapInputToType xs = List.map (\x -> Input (getChecksumFromInput x) (getGivenChecksum x) (getGivenValue x)) xs
+mapInputToType xs = List.map (\x ->
+        let
+            val = getGivenValue x
+        in
+            Input (getChecksumFromInput x) (getGivenChecksum x) val (decipherRoomName (getCipheredRoomName x) val)
+    ) xs
 
 -- Calculate the sum of valid inputs
 calculateSumOfValidInput : List Input -> Int

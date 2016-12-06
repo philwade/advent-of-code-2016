@@ -22,16 +22,35 @@ Of the real rooms from the list above, the sum of their sector IDs is 1514.
 
 What is the sum of the sector IDs of the real rooms?
 -}
-partOneOutput = "day 4 part one"
+
+partOneOutput = createInputList input |> mapInputToType |> calculateSumOfValidInput |> toString
 
 main = div []
        [ text partOneOutput
        ]
 
+type alias Input = { computedCheckSum: String
+                   , givenCheckSum: String
+                   , value: Int
+                   }
 
--- Filter funciton for values we don't care about when counting keys
+-- get integer value of input
+getGivenValue : String -> Int
+getGivenValue string =
+    let
+        intString = String.right 10 string |> String.dropRight 7
+    in
+        case (String.toInt intString) of
+            Ok val -> val
+            Err _ -> 0
+
+-- get given checksum from input
+getGivenChecksum : String -> String
+getGivenChecksum string = String.right 6 string |> String.dropRight 1
+
+-- Filter for values we don't care about when counting keys
 keyFilter : String -> Bool
-keyFilter string = 
+keyFilter string =
     let
         notIsNumeric = case (String.toInt string) of
             Ok _ -> False
@@ -39,6 +58,31 @@ keyFilter string =
         isDash = string == "-"
     in
         notIsNumeric && not isDash
+
+-- get checksum from an input line
+getChecksumFromInput : String -> String
+getChecksumFromInput str = dictFromLine str |> sortDict |> getComputedChecksum
+
+-- get the checksum from the sorted list
+getComputedChecksum : List (String, Int) -> String
+getComputedChecksum list = List.map (\(a, b) -> a) list |> List.take 5 |> String.join ""
+
+-- create a sorted list from the dict
+sortDict : Dict String Int -> List (String, Int)
+sortDict dict = Dict.toList dict |> List.sortWith sortPair |> List.reverse
+
+-- Sorting function for our pairs
+sortPair : (String, Int) -> (String, Int) -> Order
+sortPair (a, b) (c, d) =
+    if b > d then
+        GT
+    else if b == d then
+        if a > c then
+            LT
+        else
+            GT
+    else
+        LT
 
 -- Create Dict from an input
 dictFromLine : String -> Dict String Int
@@ -67,11 +111,23 @@ listFold char dict =
     in
         new
 
+-- Turn a string into a list of strings
+createInputList: String -> List String
+createInputList input = String.split "\n" input
+
+-- Create Inputs from a list of input strings
+mapInputToType : List String -> List Input
+mapInputToType xs = List.map (\x -> Input (getChecksumFromInput x) (getGivenChecksum x) (getGivenValue x)) xs
+
+-- Calculate the sum of valid inputs
+calculateSumOfValidInput : List Input -> Int
+calculateSumOfValidInput inputs = List.foldl (\input sum -> if input.computedCheckSum == input.givenCheckSum then sum + input.value else sum) 0 inputs
+
 -- Input given in the example for part one
 sampleInput = """aaaaa-bbb-z-y-x-123[abxyz]
-   a-b-c-d-e-f-g-h-987[abcde]
-   not-a-real-room-404[oarel]
-   totally-real-room-200[decoy]"""
+a-b-c-d-e-f-g-h-987[abcde]
+not-a-real-room-404[oarel]
+totally-real-room-200[decoy]"""
 
 -- Actual puzzle input
 input = """vxupkizork-sgmtkzoi-pkrrehkgt-zxgototm-644[kotgr]

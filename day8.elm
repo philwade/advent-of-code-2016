@@ -59,7 +59,8 @@ doInstruction : Instruction -> Array (Array Light) -> Array (Array Light)
 doInstruction instruction grid =
     case instruction of
         Rect x y -> drawRect x y grid
-        Column col amt -> grid
+        Column col amt ->
+            rotateColumn col amt grid
         Row row amt ->
             rotateRow row amt grid
         Noop -> grid
@@ -79,6 +80,30 @@ rotateRow rowIndex amount grid =
                     Array.set rowIndex newRow grid
 
             Nothing -> grid
+
+rotateColumn : Int -> Int -> Array (Array Light) -> Array (Array Light)
+rotateColumn columnIndex amount grid =
+    let
+        column = getColumn columnIndex grid
+        length = Array.length column
+        base = Array.repeat length Off
+        newColumn = walkAndFillRow column length base amount
+    in
+        setColumn grid columnIndex column
+
+setColumn : Array (Array Light) -> Int -> Array Light -> Array (Array Light)
+setColumn grid columnIndex newColumn =
+    Array.indexedMap (\index row ->
+                        case Array.get index newColumn of
+                            Just x -> Array.set columnIndex x row
+                            _ -> row) grid
+
+getColumn : Int -> Array (Array Light) -> Array Light
+getColumn index grid =
+        Array.foldl (\row acc ->
+                            case Array.get index row of
+                                Just n -> Array.push n acc
+                                _ -> Array.push Off acc) (Array.fromList []) grid
 
 walkAndFillRow : Array Light -> Int -> Array Light -> Int -> Array Light
 walkAndFillRow row length base amount =
@@ -184,6 +209,6 @@ parseAxis rest =
             Nothing -> 0
 
 sampleInput = """rect 3x2
-rotate column x=1 by 1
-rotate row y=0 by 4
 rotate column x=1 by 1"""
+--rotate row y=0 by 4
+--rotate column x=1 by 1"""

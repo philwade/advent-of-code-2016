@@ -2,6 +2,7 @@ module Day8 exposing(..)
 
 import Html exposing(Html, text, div, span)
 import Array exposing(Array)
+import Html.Attributes exposing (style)
 
 {-
 --- Day 8: Two-Factor Authentication ---
@@ -44,7 +45,11 @@ As you can see, this display technology is extremely powerful, and will soon dom
 There seems to be an intermediate check of the voltage used by the display: after you swipe your card, if the screen did work, how many pixels should be lit?
 
 -}
-partOneOutput = "hello 8"
+
+main = div [ style [ ("font-family", "monospace") ] ]
+       [ partTwoOutput
+       , text (toString partOneOutput)
+       ]
 
 type Instruction = Rect Int Int
                  | Column Int Int
@@ -54,6 +59,7 @@ type Instruction = Rect Int Int
 type Light = On | Off
 
 sampleGrid = Array.repeat 3 ( Array.repeat 8 Off )
+grid = Array.repeat 6 ( Array.repeat 50 Off )
 
 doInstruction : Instruction -> Array (Array Light) -> Array (Array Light)
 doInstruction instruction grid =
@@ -89,7 +95,7 @@ rotateColumn columnIndex amount grid =
         base = Array.repeat length Off
         newColumn = walkAndFillRow column length base amount
     in
-        setColumn grid columnIndex column
+        setColumn grid columnIndex newColumn
 
 setColumn : Array (Array Light) -> Int -> Array Light -> Array (Array Light)
 setColumn grid columnIndex newColumn =
@@ -118,7 +124,11 @@ drawRect : Int -> Int -> Array (Array Light) -> Array (Array Light)
 drawRect x y grid =
     Array.indexedMap (\index row -> if index < x then fillRow row y else row) grid
 
-fillRow row amount = Array.append (Array.repeat amount On) (Array.slice 0 amount row)
+fillRow row amount =
+    let
+        length = Array.length row
+    in
+        Array.append (Array.repeat amount On) (Array.slice amount length row)
 
 renderGrid : Array (Array Light) -> Html msg
 renderGrid grid =
@@ -134,9 +144,14 @@ renderLight light =
         On -> text "#"
         Off -> text "."
 
-main = String.split "\n" sampleInput
+partOneOutput = String.split "\n" input
         |> List.map parseInstruction
-        |> List.foldl doInstruction sampleGrid
+        |> List.foldl doInstruction grid
+        |> Array.foldl (\row acc -> Array.filter (\x -> x == On) row |> Array.length |> (+) acc) 0
+
+partTwoOutput = String.split "\n" input
+        |> List.map parseInstruction
+        |> List.foldl doInstruction grid
         |> renderGrid
 
 parseInstruction : String -> Instruction
@@ -157,7 +172,7 @@ parseRectangle parts =
     let
         rest = List.tail parts |> Maybe.withDefault []
         rawShape = List.head rest |> Maybe.withDefault ""
-        shapeParts = String.split "" rawShape
+        shapeParts = String.split "x" rawShape
         x = List.head shapeParts |> Maybe.withDefault ""
         y = List.reverse shapeParts |> List.head |> Maybe.withDefault ""
     in
@@ -198,7 +213,7 @@ parseAxis rest =
         case axis of
             Just str ->
                 let
-                    strVal = String.split "" str |> List.reverse |> List.head
+                    strVal = String.split "=" str |> List.reverse |> List.head
                 in
                     case strVal of
                         Just n ->
@@ -209,6 +224,152 @@ parseAxis rest =
             Nothing -> 0
 
 sampleInput = """rect 3x2
+rotate column x=1 by 1
+rotate row y=0 by 4
 rotate column x=1 by 1"""
---rotate row y=0 by 4
---rotate column x=1 by 1"""
+
+input = """rect 1x1
+rotate row y=0 by 5
+rect 1x1
+rotate row y=0 by 6
+rect 1x1
+rotate row y=0 by 5
+rect 1x1
+rotate row y=0 by 2
+rect 1x1
+rotate row y=0 by 5
+rect 2x1
+rotate row y=0 by 2
+rect 1x1
+rotate row y=0 by 4
+rect 1x1
+rotate row y=0 by 3
+rect 2x1
+rotate row y=0 by 7
+rect 3x1
+rotate row y=0 by 3
+rect 1x1
+rotate row y=0 by 3
+rect 1x2
+rotate row y=1 by 13
+rotate column x=0 by 1
+rect 2x1
+rotate row y=0 by 5
+rotate column x=0 by 1
+rect 3x1
+rotate row y=0 by 18
+rotate column x=13 by 1
+rotate column x=7 by 2
+rotate column x=2 by 3
+rotate column x=0 by 1
+rect 17x1
+rotate row y=3 by 13
+rotate row y=1 by 37
+rotate row y=0 by 11
+rotate column x=7 by 1
+rotate column x=6 by 1
+rotate column x=4 by 1
+rotate column x=0 by 1
+rect 10x1
+rotate row y=2 by 37
+rotate column x=19 by 2
+rotate column x=9 by 2
+rotate row y=3 by 5
+rotate row y=2 by 1
+rotate row y=1 by 4
+rotate row y=0 by 4
+rect 1x4
+rotate column x=25 by 3
+rotate row y=3 by 5
+rotate row y=2 by 2
+rotate row y=1 by 1
+rotate row y=0 by 1
+rect 1x5
+rotate row y=2 by 10
+rotate column x=39 by 1
+rotate column x=35 by 1
+rotate column x=29 by 1
+rotate column x=19 by 1
+rotate column x=7 by 2
+rotate row y=4 by 22
+rotate row y=3 by 5
+rotate row y=1 by 21
+rotate row y=0 by 10
+rotate column x=2 by 2
+rotate column x=0 by 2
+rect 4x2
+rotate column x=46 by 2
+rotate column x=44 by 2
+rotate column x=42 by 1
+rotate column x=41 by 1
+rotate column x=40 by 2
+rotate column x=38 by 2
+rotate column x=37 by 3
+rotate column x=35 by 1
+rotate column x=33 by 2
+rotate column x=32 by 1
+rotate column x=31 by 2
+rotate column x=30 by 1
+rotate column x=28 by 1
+rotate column x=27 by 3
+rotate column x=26 by 1
+rotate column x=23 by 2
+rotate column x=22 by 1
+rotate column x=21 by 1
+rotate column x=20 by 1
+rotate column x=19 by 1
+rotate column x=18 by 2
+rotate column x=16 by 2
+rotate column x=15 by 1
+rotate column x=13 by 1
+rotate column x=12 by 1
+rotate column x=11 by 1
+rotate column x=10 by 1
+rotate column x=7 by 1
+rotate column x=6 by 1
+rotate column x=5 by 1
+rotate column x=3 by 2
+rotate column x=2 by 1
+rotate column x=1 by 1
+rotate column x=0 by 1
+rect 49x1
+rotate row y=2 by 34
+rotate column x=44 by 1
+rotate column x=40 by 2
+rotate column x=39 by 1
+rotate column x=35 by 4
+rotate column x=34 by 1
+rotate column x=30 by 4
+rotate column x=29 by 1
+rotate column x=24 by 1
+rotate column x=15 by 4
+rotate column x=14 by 1
+rotate column x=13 by 3
+rotate column x=10 by 4
+rotate column x=9 by 1
+rotate column x=5 by 4
+rotate column x=4 by 3
+rotate row y=5 by 20
+rotate row y=4 by 20
+rotate row y=3 by 48
+rotate row y=2 by 20
+rotate row y=1 by 41
+rotate column x=47 by 5
+rotate column x=46 by 5
+rotate column x=45 by 4
+rotate column x=43 by 5
+rotate column x=41 by 5
+rotate column x=33 by 1
+rotate column x=32 by 3
+rotate column x=23 by 5
+rotate column x=22 by 1
+rotate column x=21 by 2
+rotate column x=18 by 2
+rotate column x=17 by 3
+rotate column x=16 by 2
+rotate column x=13 by 5
+rotate column x=12 by 5
+rotate column x=11 by 5
+rotate column x=3 by 5
+rotate column x=2 by 5
+rotate column x=1 by 5"""

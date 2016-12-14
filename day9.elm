@@ -6,6 +6,22 @@ sampleInput = "A(1x5)BC"
 
 partOneOutput = walkInput (String.split "" input) "" |> String.length
 
+getValue : List String -> Int -> Int
+getValue input start =
+    case List.head input of
+        Just "(" ->
+            let
+                (instruction, set) = getInstruction (getRest input) ""
+                (newSet, rest) = doInstruction2 instruction set
+            in
+                if List.member "(" newSet then
+                    getValue rest ((instruction.multiplier * (getValue newSet 0)) + start)
+                else
+                    getValue rest ((instruction.multiplier * instruction.take) + start)
+        Just a ->
+            1 + (getValue (getRest input) start)
+        Nothing -> start
+
 recursiveWalkInput : String -> String
 recursiveWalkInput input =
     if String.contains "(" input then
@@ -33,6 +49,14 @@ doInstruction instruction set =
         output = List.repeat instruction.multiplier toRepeat |> List.concat |> String.join ""
     in
         (output, rest)
+
+doInstruction2 : Instruction -> List String -> (List String, List String)
+doInstruction2 instruction set =
+    let
+        toRepeat = List.take instruction.take set
+        rest = List.drop instruction.take set
+    in
+        (toRepeat, rest)
 
 
 getRest : List String -> List String

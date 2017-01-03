@@ -109,11 +109,6 @@ In your situation, what is the minimum number of steps required to bring all of 
 
 partOneOutput = div [ style [ ("font-family", "monospace") ] ] (renderFacility facility)
 
-type alias Floor = { number: Char
-                   , elevator: Bool
-                   , contents: List Object
-                   }
-
 type Object = Microchip Char
             | Generator Char
 
@@ -124,52 +119,34 @@ type Status = Valid
 
 main = partOneOutput
 
-checkStatus : List Floor -> Status
-checkStatus facility = Valid
+type alias Facility = { elevator: Int
+                      , items: List (Int, Object)
+                      }
 
-floorValid : Floor -> Bool
-floorValid { number, elevator, contents } =
-    case (elevator, contents) of
-        (True, []) -> False
-        (_, [_]) -> True
-        (_, content) -> validContents content
+facility = Facility 1 [ (1, Generator 'T')
+                      , (1, Microchip 'T')
+                      , (1, Generator 'P')
+                      , (1, Generator 'S')
+                      , (2, Microchip 'P')
+                      , (2,  Microchip 'S')
+                      , (3, Generator 'Q')
+                      , (3, Microchip 'Q')
+                      , (3, Generator 'R')
+                      , (3, Microchip 'R')
+                      ]
 
-validContents : List Object -> Bool
-validContents content =
-    let
-        fold acc obj =
-            case obj of
-                Microchip m -> 
-    List.foldl (\acc obj -> 
-
-facility = [ Floor '1' True [ Generator 'T'
-                            , Microchip 'T'
-                            , Generator 'P'
-                            , Generator 'S'
-                            ]
-           , Floor '2' False [ Microchip 'P'
-                             , Microchip 'S'
-                             ]
-           , Floor '3' False [ Generator 'Q'
-                             , Microchip 'Q'
-                             , Generator 'R'
-                             , Microchip 'R'
-                             ]
-           , Floor '4' False []
-           ]
-
-renderFacility : List Floor -> List (Html msg)
-renderFacility floors = List.map renderFloor (List.reverse floors)
+renderFacility : Facility -> List (Html msg)
+renderFacility facility = List.map (renderFloor facility) [1, 2, 3, 4]
 
 spaced = [ style [ ("padding", "5px") ] ]
 
-renderFloor : Floor -> Html msg
-renderFloor floor =
+renderFloor : Facility -> Int -> Html msg
+renderFloor facility index =
     let
-        items = List.map renderObject floor.contents
+        items = List.filter (\(i, v) -> i == index) facility.items |> List.map (\(i, v) -> renderObject v)
     in
-        div [] ([ span [] [ text (show floor.number "F") ]
-                            , span spaced [ text (if floor.elevator then "E" else ".") ]
+        div [] ([ span [] [ text ("F" ++ (toString index)) ]
+                            , span spaced [ text (if facility.elevator == index then "E" else ".") ]
                             ] ++ items)
 
 show char id = String.reverse <| String.cons char id

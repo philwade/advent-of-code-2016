@@ -128,12 +128,47 @@ facility = Facility 1 [ (1, Generator 'T')
                       , (1, Generator 'P')
                       , (1, Generator 'S')
                       , (2, Microchip 'P')
-                      , (2,  Microchip 'S')
+                      , (2, Microchip 'S')
                       , (3, Generator 'Q')
                       , (3, Microchip 'Q')
                       , (3, Generator 'R')
                       , (3, Microchip 'R')
                       ]
+
+floorValid : List Object -> Bool
+floorValid objects =
+    case objects of
+        [] -> True
+        _ ->
+            let
+                generators = List.filter generatorFilter objects
+                microchips = List.filter microchipFilter objects
+            in
+                List.foldl (\c acc -> acc && (List.length generators == 0 || List.any (objMatch c) generators)) True microchips
+
+objMatch : Object -> Object -> Bool
+objMatch match against =
+    case match of
+        Microchip a ->
+            case against of
+                Generator b -> a == b
+                _ -> False
+        Generator c ->
+            case against of
+                Microchip d -> d == c
+                _ -> False
+
+microchipFilter : Object -> Bool
+microchipFilter obj =
+                    case obj of
+                        Microchip _ -> True
+                        _ -> False
+
+generatorFilter : Object -> Bool
+generatorFilter obj =
+                    case obj of
+                        Generator _ -> True
+                        _ -> False
 
 renderFacility : Facility -> List (Html msg)
 renderFacility facility = List.map (renderFloor facility) [1, 2, 3, 4]

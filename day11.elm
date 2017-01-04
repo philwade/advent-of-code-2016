@@ -111,6 +111,7 @@ partOneOutput = div [ style [ ("font-family", "monospace") ] ] (renderFacility f
 
 type Object = Microchip Char
             | Generator Char
+            | Nothing
 
 type Status = Valid
             | Invalid
@@ -146,6 +147,17 @@ floorValid objects =
             in
                 List.foldl (\c acc -> acc && (List.length generators == 0 || List.any (objMatch c) generators)) True microchips
 
+movesFromFloor : List Object -> List (Object, Object)
+movesFromFloor floor =
+    case floor of
+        x::xs ->
+            let
+                bs = List.repeat (List.length xs) x
+                solo = [ (x, Nothing) ]
+            in
+                List.map2 (,) bs xs ++ solo ++ movesFromFloor xs
+        [] -> []
+
 objMatch : Object -> Object -> Bool
 objMatch match against =
     case match of
@@ -157,6 +169,7 @@ objMatch match against =
             case against of
                 Microchip d -> d == c
                 _ -> False
+        Nothing -> False
 
 microchipFilter : Object -> Bool
 microchipFilter obj =
@@ -195,3 +208,4 @@ renderObject object =
         case object of
             Microchip m -> span spaced [ text (chip m) ]
             Generator g -> span spaced [ text (gen g) ]
+            Nothing -> span spaced [ text "." ]

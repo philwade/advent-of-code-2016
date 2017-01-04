@@ -136,6 +136,40 @@ facility = Facility 1 [ (1, Generator 'T')
                       , (3, Microchip 'R')
                       ]
 
+facility_invalid = Facility 1 [ (1, Generator 'T')
+                      , (1, Microchip 'U')
+                      , (1, Generator 'P')
+                      , (1, Generator 'S')
+                      , (2, Microchip 'P')
+                      , (2, Microchip 'S')
+                      , (3, Generator 'Q')
+                      , (3, Microchip 'Q')
+                      , (3, Generator 'R')
+                      , (3, Microchip 'R')
+                      ]
+
+facility_solved = Facility 1 [ (4, Generator 'T')
+                      , (4, Microchip 'T')
+                      , (4, Generator 'P')
+                      , (4, Generator 'S')
+                      ]
+
+facilityState : Facility -> Status
+facilityState facility =
+    let
+        getFloor items i = List.filter (\(index, value) -> index == i) items |> List.map (\(i, v) -> v)
+        floorStates = List.map floorValid <| List.map (getFloor facility.items) [1, 2, 3, 4]
+        valid = List.foldl (\a acc -> acc && a) True floorStates
+        solved = List.filter (\(index, value) -> not (index == 4)) facility.items |> List.length |> (==) 0
+    in
+        if solved then
+            Solved
+        else if valid then
+            Valid
+        else
+            Invalid
+
+
 floorValid : List Object -> Bool
 floorValid objects =
     case objects of
